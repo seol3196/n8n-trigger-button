@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>n8n 트리거 버튼</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, sans-serif;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+        button {
+            background-color: #2382FC;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s;
+            width: 200px;
+        }
+        button:hover {
+            background-color: #0B66DE;
+        }
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            width: 90%;
+            max-width: 500px;
+            display: none;
+        }
+        .success {
+            background-color: #E6F4EA;
+            border: 1px solid #43A047;
+            color: #1E4620;
+            display: block;
+        }
+        .error {
+            background-color: #FEECEC;
+            border: 1px solid #D50000;
+            color: #8B0000;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    
+    <button id="triggerButton">워크플로우 실행</button>
+    
+    <div id="resultBox" class="result"></div>
+
+    <script>
+        // n8n에서 생성한 웹훅 URL을 여기에 입력
+        const webhookUrl = 'http://1.250.230.238:5678/webhook-test/f5a40a9a-6c41-4460-8ac9-64640ed3571c';
+        
+        // 결과 표시 함수
+        function showResult(message, isSuccess) {
+            const resultBox = document.getElementById('resultBox');
+            resultBox.textContent = message;
+            resultBox.className = 'result ' + (isSuccess ? 'success' : 'error');
+        }
+        
+        // 트리거 버튼
+        document.getElementById('triggerButton').addEventListener('click', function() {
+            const data = {
+                action: 'trigger_workflow',
+                source: 'notion_button',
+                timestamp: new Date().toISOString()
+            };
+            
+            triggerWebhook(data);
+        });
+        
+        // 웹훅 트리거 함수
+        function triggerWebhook(data) {
+            fetch(webhookUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json().catch(() => ({})); // JSON 파싱 오류 대비
+                }
+                throw new Error('네트워크 응답이 올바르지 않습니다');
+            })
+            .then(data => {
+                console.log('성공:', data);
+                showResult('워크플로우가 성공적으로 트리거되었습니다!', true);
+            })
+            .catch(error => {
+                console.error('오류:', error);
+                showResult('오류가 발생했습니다: ' + error.message, false);
+            });
+        }
+    </script>
+</body>
+</html>
